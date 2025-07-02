@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solar System Photo Orbit</title>
+  <!-- GSAP CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+      background: #111;
+      color: #fff;
+    }
+    body {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+    .background-blur {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      width: 100vw;
+      height: 100vh;
+      background-size: cover;
+      background-position: center;
+      filter: blur(18px) brightness(0.7);
+      z-index: 0;
+      transition: background-image 0.6s;
+    }
+    #particle-canvas {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.7;
+    }
+    .solar-system {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60vw; height: 60vw;
+      min-width: 340px; min-height: 340px;
+      max-width: 90vh; max-height: 90vh;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .sun-photo {
+      position: absolute;
+      left: 50%; top: 50%;
+      width: 18vw; height: 18vw;
+      min-width: 180px; min-height: 180px;
+      max-width: 320px; max-height: 320px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      box-shadow: 0 0 60px 20px #fff8, 0 0 0 8px #fff3;
+      overflow: hidden;
+      z-index: 3;
+      border: 4px solid #fff4;
+      background: #222;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      transition: box-shadow 0.4s;
+      animation: sun-glow 2.5s infinite alternate;
+    }
+    @keyframes sun-glow {
+      0% { box-shadow: 0 0 60px 20px #fff8, 0 0 0 8px #fff3; }
+      100% { box-shadow: 0 0 90px 30px #fff9, 0 0 0 12px #fff5; }
+    }
+    .sun-photo img {
+      width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
+      display: block;
+    }
+    .sun-caption {
+      position: absolute;
+      bottom: 8%; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.35);
+      color: #fff;
+      font-size: 1.5vw;
+      padding: 0.7vw 1.5vw;
+      border-radius: 1vw;
+      text-shadow: 0 2px 16px #000, 0 1px 2px #222;
+      box-shadow: 0 2px 16px 0 rgba(0,0,0,0.18);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      opacity: 0.92;
+      pointer-events: auto;
+      white-space: nowrap;
+    }
+    .planet-photo {
+      position: absolute;
+      width: 8vw; height: 8vw;
+      min-width: 80px; min-height: 80px;
+      max-width: 140px; max-height: 140px;
+      border-radius: 50%;
+      box-shadow: 0 4px 24px 0 rgba(0,0,0,0.25);
+      overflow: hidden;
+      border: 2.5px solid #fff5;
+      background: #222;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      transition: box-shadow 0.3s;
+      z-index: 2;
+      pointer-events: auto;
+    }
+    .planet-photo img {
+      width: 100%; height: 120%; object-fit: cover; border-radius: 50%;
+      display: block;
+    }
+    .planet-caption {
+      position: absolute;
+      bottom: 6%; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.35);
+      color: #fff;
+      font-size: 1vw;
+      padding: 0.4vw 1vw;
+      border-radius: 0.7vw;
+      text-shadow: 0 2px 16px #000, 0 1px 2px #222;
+      box-shadow: 0 2px 16px 0 rgba(0,0,0,0.18);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      opacity: 0.92;
+      pointer-events: auto;
+      white-space: nowrap;
+    }
+    .music-toggle {
+      position: absolute;
+      top: 2vh;
+      right: 2vw;
+      z-index: 20;
+      background: rgba(0,0,0,0.4);
+      border: none;
+      border-radius: 50%;
+      width: 3vw;
+      height: 3vw;
+      min-width: 36px;
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #fff;
+      font-size: 1.5vw;
+      box-shadow: 0 2px 12px 0 rgba(0,0,0,0.18);
+      outline: none;
+      transition: background 0.2s;
+    }
+    .music-toggle:hover {
+      background: rgba(0,0,0,0.7);
+    }
+    @media (max-width: 900px) {
+      .solar-system { width: 90vw; height: 90vw; }
+      .sun-photo { width: 28vw; height: 28vw; }
+      .planet-photo { width: 13vw; height: 13vw; }
+      .sun-caption { font-size: 3vw; }
+      .planet-caption { font-size: 2vw; }
+    }
+    @media (max-width: 600px) {
+      .solar-system { width: 98vw; height: 98vw; }
+      .sun-photo { width: 38vw; height: 38vw; }
+      .planet-photo { width: 18vw; height: 18vw; }
+      .sun-caption { font-size: 4vw; }
+      .planet-caption { font-size: 3vw; }
+    }
+  </style>
+</head>
+<body>
+  <div class="background-blur"></div>
+  <canvas id="particle-canvas"></canvas>
+  <div class="solar-system" id="solarSystem"></div>
+  <button class="music-toggle" id="musicToggle" title="Toggle Music" aria-label="Toggle Music">
+    <span id="musicIcon">&#128266;</span>
+  </button>
+  <audio id="bgMusic" src="./[iSongs.info] 02 - Kollagotte.mp3" loop preload="auto"></audio>
+  <script>
+    // 1. Image Data
+    const slides = [
+      { url: 'https://res.cloudinary.com/dldm4lxpd/image/upload/v1751476621/hero_w8pnub.jpg', caption: 'Pinky💖' },
+      { url: 'https://res.cloudinary.com/dldm4lxpd/image/upload/v1751476365/WhatsApp_Image_2025-06-12_at_7.09.03_PM_mhctdn.jpg', caption: '' },
+      { url: 'https://res.cloudinary.com/dldm4lxpd/image/upload/v1751475685/first_anggly.jpg', caption: '' },
+      { url: 'https://res.cloudinary.com/dldm4lxpd/image/upload/v1751476920/WhatsApp_Image_2025-06-30_at_7.51.55_PM_bhj9kp.jpg', caption: '' },
+      { url: 'https://res.cloudinary.com/dldm4lxpd/image/upload/v1751476476/mini_qa7qbx.jpg', caption: '' },
+      { url: 'https://res.cloudinary.com/dldm4lxpd/image/upload/v1751476245/WhatsApp_Image_2025-06-12_at_7.09.01_PM_u0cjvc.jpg', caption: '' },
+      { url: 'https://res.cloudinary.com/dldm4lxpd/image/upload/v1751477006/WhatsApp_Image_2025-06-30_at_7.51.54_PM_l4bva0.jpg', caption:'' },
+      { url: 'https://res.cloudinary.com/dldm4lxpd/image/upload/v1751476790/WhatsApp_Image_2025-06-12_at_7.09.02_PM_wwbmfs.jpg', caption: ''},
+      { url: 'https://res.cloudinary.com/dldm4lxpd/image/upload/v1751475806/second_ilruwq.jpg', caption: '' },
+      { url: 'https://res.cloudinary.com/dldm4lxpd/image/upload/v1751475125/main_j3mgxo.jpg', caption: '' }
+    ];
+
+    // Set blurred background image (use the first slide)
+    document.querySelector('.background-blur').style.backgroundImage = `url('${slides[0].url}')`;
+
+    // 2. Preload Images
+    let loaded = 0;
+    const preloadImages = slides.map(slide => {
+      return new Promise(res => {
+        const img = new Image();
+        img.src = slide.url;
+        img.onload = img.onerror = () => { loaded++; res(); };
+      });
+    });
+
+    // 3. Solar System Setup
+    const solarSystem = document.getElementById('solarSystem');
+    // Sun (center photo)
+    const sunDiv = document.createElement('div');
+    sunDiv.className = 'sun-photo';
+    sunDiv.innerHTML = `<img src="${slides[0].url}" alt="Sun"><div class="sun-caption">${slides[0].caption}</div>`;
+    solarSystem.appendChild(sunDiv);
+
+    // Planets (orbiting photos)
+    const planetDivs = [];
+    for (let i = 1; i < slides.length; i++) {
+      const planet = document.createElement('div');
+      planet.className = 'planet-photo';
+      planet.innerHTML = `<img src="${slides[i].url}" alt="Planet"><div class="planet-caption">${slides[i].caption}</div>`;
+      solarSystem.appendChild(planet);
+      planetDivs.push(planet);
+    }
+
+    // 4. Animate Planets Orbiting
+    function animatePlanets() {
+      const w = solarSystem.offsetWidth;
+      const h = solarSystem.offsetHeight;
+      const cx = w / 2, cy = h / 2;
+      const orbitR = Math.min(w, h) * 0.36;
+      const now = performance.now() / 1000;
+      const angularSpeed = 0.25; // radians per second
+
+      planetDivs.forEach((planet, i) => {
+        const baseAngle = (i * 2 * Math.PI) / planetDivs.length;
+        const angle = baseAngle + now * angularSpeed;
+        const yOsc = Math.sin(now * 0.7 + i) * 8;
+        const x = cx + orbitR * Math.cos(angle) - planet.offsetWidth / 2;
+        const y = cy + orbitR * Math.sin(angle) * 0.7 - planet.offsetHeight / 2 + yOsc;
+        planet.style.left = x + 'px';
+        planet.style.top = y + 'px';
+        planet.style.zIndex = 10 + Math.round(100 * Math.sin(angle));
+        planet.style.filter = "none";
+        planet.style.opacity = 1;
+      });
+      requestAnimationFrame(animatePlanets);
+    }
+    Promise.all(preloadImages).then(() => {
+      animatePlanets();
+    });
+
+    // 5. Particle Field (unique touch)
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    function createParticles() {
+      particles = [];
+      for (let i = 0; i < 80; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          r: 0.7 + Math.random() * 2.2,
+          dx: -0.2 + Math.random() * 0.4,
+          dy: -0.2 + Math.random() * 0.4,
+          alpha: 0.2 + Math.random() * 0.5
+        });
+      }
+    }
+    createParticles();
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const p of particles) {
+        ctx.save();
+        ctx.globalAlpha = p.alpha;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, 2 * Math.PI);
+        ctx.fillStyle = '#fff';
+        ctx.shadowColor = '#fff';
+        ctx.shadowBlur = 8;
+        ctx.fill();
+        ctx.restore();
+        p.x += p.dx;
+        p.y += p.dy;
+        if (p.x < 0) p.x = canvas.width;
+        if (p.x > canvas.width) p.x = 0;
+        if (p.y < 0) p.y = canvas.height;
+        if (p.y > canvas.height) p.y = 0;
+      }
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+
+    // 6. Music Toggle
+    const music = document.getElementById('bgMusic');
+    const musicToggle = document.getElementById('musicToggle');
+    const musicIcon = document.getElementById('musicIcon');
+    let musicOn = true;
+
+    // Try to play on load
+    window.addEventListener('load', () => {
+      music.volume = 0.7;
+      music.play().then(() => {
+        musicOn = true;
+        musicIcon.innerHTML = '&#128266;';
+      }).catch(() => {
+        // Autoplay blocked, wait for user interaction
+        musicOn = false;
+        musicIcon.innerHTML = '&#128263;';
+      });
+    });
+
+    // Play on first user interaction if not already playing
+    ['click', 'touchstart'].forEach(event => {
+      window.addEventListener(event, () => {
+        if (music.paused) {
+          music.play().then(() => {
+            musicOn = true;
+            musicIcon.innerHTML = '&#128266;';
+          });
+        }
+      }, { once: true });
+    });
+
+    // Toggle button
+    musicToggle.addEventListener('click', () => {
+      musicOn = !musicOn;
+      if (musicOn) {
+        music.play();
+        musicIcon.innerHTML = '&#128266;';
+      } else {
+        music.pause();
+        musicIcon.innerHTML = '&#128263;';
+      }
+    });
+  </script>
+</body>
+</html> 
